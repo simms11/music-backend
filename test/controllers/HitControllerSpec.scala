@@ -11,13 +11,13 @@ import play.api.test._
  *
  * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
  */
-class HitsControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
+class HitControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
   "HomeController GET" should {
 
     "render the index page from a new instance of controller" in {
-      val controller = new HitsController(Helpers.stubControllerComponents())
-      val hits = controller.getHits().apply(FakeRequest(GET, "/"))
+      val controller = new HitsController(stubControllerComponents())
+      val hits = controller.getHits().apply(FakeRequest(GET, "/hits"))
 
       status(hits) mustBe OK
       contentType(hits) mustBe Some("text/html")
@@ -26,7 +26,7 @@ class HitsControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
 
     "render the index page from the application" in {
       val controller = inject[HitsController]
-      val hits = controller.addHit().apply(FakeRequest(GET, "/"))
+      val hits = controller.getHits().apply(FakeRequest(GET, "/hits"))
 
       status(hits) mustBe OK
       contentType(hits) mustBe Some("text/html")
@@ -34,7 +34,7 @@ class HitsControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
     }
 
     "render the index page from the router" in {
-      val request = FakeRequest(GET, "/")
+      val request = FakeRequest(GET, "/hits")
       val home = route(app, request).get
 
       status(home) mustBe OK
@@ -43,7 +43,5 @@ class HitsControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
     }
   }
 
-  "HomeController POST" should {
 
-  }
 }
