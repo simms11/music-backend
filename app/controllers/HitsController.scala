@@ -1,25 +1,48 @@
 package controllers
-import javax.inject.{Inject, Singleton}
-import models.Hit
-import play.api.libs.json.Json._
-import play.api.mvc.{BaseController, ControllerComponents, InjectedController}
+
+//import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse}
+
 import famousHits.FamousHits
+import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json
+import play.api.libs.json.Json._
+import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import play.modules.reactivemongo._
+import reactivemongo.play.json.collection.JSONCollection
+
+import scala.concurrent.{ExecutionContext, Future}
+import reactivemongo.play.json._, collection._
 
 @Singleton
-class HitsController @Inject()(val controllerComponents: ControllerComponents) extends BaseController{
-  def getHits() = Action {
+class HitsController @Inject()( controllerComponents: ControllerComponents,
+                               val reactiveMongoApi: ReactiveMongoApi)
+  extends AbstractController(controllerComponents ) with MongoController with ReactiveMongoComponents {
+  implicit def ec: ExecutionContext = controllerComponents.executionContext
+
+  def getHits: Action[AnyContent] = Action {
     val hits = FamousHits.getHits
-    Ok(stringify(toJson(hits)))
+    Ok(toJson(hits))
   }
 
-  def getHit(iD:Int) = Action {
+  def getHit(iD: Int): Action[AnyContent] = Action {
     val hit = FamousHits.getHits(iD)
-    Ok(stringify(toJson(hit)))
+    Ok(toJson(hit))
   }
 
-  def addHit() = Action(parse.json) { implicit request =>
-    val newHit = request.body.as[Hit]
-    val hit = FamousHits.addHit(newHit)
-    Ok(stringify(toJson(hit)))
-  }
-}
+  def collection: Future[JSONCollection] =
+    database.map(_.collection[JSONCollection]("hits"))
+
+
+
+  def addHit() = Action.async {
+    val json = Json.obj(
+      "name" -> "testUser",
+      "age" -> "30",
+      "created" -> new java.util.Date().getTime()
+    )
+    // collection.
+    collection.flatMap(_.insert.one(json)).map(lastError =>
+      Ok("Mongo LastError: %s".format(lastError)))
+  }}
+
+
