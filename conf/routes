@@ -14,7 +14,6 @@ GET         /hits                controllers.HitsController.getHits
 
 GET         /hits/:id            controllers.HitsController.getHit(id: Int)
 
-# curl -X DELETE http://localhost:9000/hits/testUser
-DELETE      /hits/:id            controllers.HitsController.deleteHit(id: String)
+DELETE      /hits/:id            controllers.HitsController.deleteHit(id: Int)
 
 POST        /hits                controllers.HitsController.addHit

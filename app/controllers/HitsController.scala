@@ -1,6 +1,5 @@
 package controllers
 
-import famousHits.FamousHits
 import javax.inject.{Inject, Singleton}
 import models.Hit
 import models.Hit.format
@@ -9,6 +8,7 @@ import play.api.libs.json.Json
 import play.api.libs.json.Json._
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import play.modules.reactivemongo._
+import reactivemongo.api.{Cursor, ReadPreference}
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.{JSONCollection, _}
 
@@ -20,19 +20,30 @@ class HitsController @Inject()(controllerComponents: ControllerComponents,
   extends AbstractController(controllerComponents) with MongoController with ReactiveMongoComponents {
   implicit def ec: ExecutionContext = controllerComponents.executionContext
 
-  def getHits: Action[AnyContent] = Action {
-    val hits = FamousHits.getHits
-    Ok(toJson(hits))
+  def getHits: Action[AnyContent] = Action.async {
+    collection.flatMap(
+      _.find(Json.obj())
+        .cursor[Hit](ReadPreference.primary)
+        .collect[Seq](Int.MaxValue, Cursor.FailOnError[Seq[Hit]]()))
+      .map(hits => Ok(Json.toJson(hits)))
   }
 
-  def getHit(iD: Int): Action[AnyContent] = Action {
-    val hit = FamousHits.getHits(iD)
-    Ok(toJson(hit))
-  }
 
-  def deleteHit(id: String): Action[AnyContent] = Action.async {
+  def getHit(id: Int): Action[AnyContent] = Action.async{
     val query = Json.obj(
-      "name" -> id,
+      "id" -> id,
+    )
+
+    collection.flatMap(_.find(query).one[Hit]).map {
+      case Some(hit) => Ok(Json.toJson(hit))
+      case _ => NotFound("Hit not found")
+    }
+
+  }
+
+  def deleteHit(id: Int): Action[AnyContent] = Action.async {
+    val query = Json.obj(
+      "id" -> id,
     )
     collection.flatMap(_.delete.one(query)).map(lastError =>
       Ok("Mongo LastError: %s".format(lastError)))
