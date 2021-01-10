@@ -29,9 +29,10 @@ class HitsController @Inject()(controllerComponents: ControllerComponents,
   }
 
 
-  def getHit(id: Int): Action[AnyContent] = Action.async{
+  def getHit(name:String): Action[AnyContent] = Action.async{
     val query = Json.obj(
-      "id" -> id,
+     // "id" -> id,
+      "name" -> name
     )
 
     collection.flatMap(_.find(query).one[Hit]).map {
@@ -41,9 +42,21 @@ class HitsController @Inject()(controllerComponents: ControllerComponents,
 
   }
 
-  def deleteHit(id: Int): Action[AnyContent] = Action.async {
+  def updateHit(name:String) : Action[AnyContent]  = Action.async{  implicit request =>
+
     val query = Json.obj(
-      "id" -> id,
+      "name" -> name
+    )
+
+    collection.flatMap(_.update.one(query,name, upsert = true))
+      .map (lastError =>
+        Ok("Mongo LastError: %s".format(lastError)))
+
+  }
+
+  def deleteHit(name:String): Action[AnyContent] = Action.async {
+    val query = Json.obj(
+      "name" -> name
     )
     collection.flatMap(_.delete.one(query)).map(lastError =>
       Ok("Mongo LastError: %s".format(lastError)))

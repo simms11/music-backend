@@ -12,8 +12,10 @@ GET         /assets/*file        controllers.Assets.versioned(path="/public", fi
 
 GET         /hits                controllers.HitsController.getHits
 
-GET         /hits/:id            controllers.HitsController.getHit(id: Int)
+GET         /hits/:name            controllers.HitsController.getHit(name:String)
 
-DELETE      /hits/:id            controllers.HitsController.deleteHit(id: Int)
+DELETE      /hits/:name            controllers.HitsController.deleteHit(name:String)
 
 POST        /hits                controllers.HitsController.addHit
+
+PATCH       /hits/:name         controllers.HitsController.updateHit(name:String)
